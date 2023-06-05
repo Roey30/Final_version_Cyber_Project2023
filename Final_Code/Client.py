@@ -1093,13 +1093,19 @@ class EditPicturesPage(tk.Frame):
         הפעולה הזאת בעצם היא זאת שיוצרת את כל התכונות של העמוד בתוך המחלקה, למשל היא יוצרת את הכותרות והכפתורים.
         """
         super().__init__(master)
-        global EDIT_IMAGE, PANEL, EDIT_IMAGE_PATH, UPLOAD_EDIT_BUTTON, picture, NUMBER_PAGE, IMAGE_INFO_LABEL, \
+        global EDIT_IMAGE, PANEL, EDIT_IMAGE_PATH, UPLOAD_EDIT_BUTTON, picture, NUMBER_PAGE, IMAGE_INFO_LABEL, NO_PATH, NO_NAME, \
             DOWN_LOAD_PICTURE_BUTTON, VERSION, IMAGE_PIL, IMG, IMAGE_AFTER_EDIT, PANEL_EDITED_IMAGE, NO_EDIT_LABEL, NAME_FIRST_LABEL
         self.configure(bg=BACKGROUND_COLOR)
         if NUMBER_PICTURE == 0:
             NUMBER_PAGE = 3
         else:
             NUMBER_PAGE = 2
+        NO_PATH = tk.Label(self, text="Please enter path name to download", bg="black", fg="white",
+                           font=("Arial", 12, "bold"), padx=20,
+                           pady=20, bd=3, relief=tk.RAISED)
+        NO_NAME = tk.Label(self, text="Please enter picture name to upload", bg="black", fg="white",
+                           font=("Arial", 12, "bold"), padx=20,
+                           pady=20, bd=3, relief=tk.RAISED)
         tk.Label(self, text="Edit pictures Page", font=LARGE_FONT, bg=BACKGROUND_COLOR, fg="white", padx=20,
                  pady=20, bd=3). \
             place(x=600, y=20, anchor=tk.CENTER, width=1200, height=80)
@@ -1127,7 +1133,7 @@ class EditPicturesPage(tk.Frame):
                                                   bg=COLOR, fg="white", font=("Arial", 12, "bold"), padx=20, pady=20,
                                                   bd=3, relief=tk.RAISED, activebackground=BACKGROUND_BUTTON_COLOR,
                                                   command=lambda: (check_picture(picture_path_name.get(),
-                                                                                 picture_name.get(), self)))
+                                                                                 picture_name.get())))
         Are_You_Sure_button_edit_page.place(x=1050, y=700, anchor=tk.CENTER, width=300, height=50)
         DOWN_LOAD_PICTURE_BUTTON.place(x=750, y=700, anchor=tk.CENTER, width=300, height=50)
         UPLOAD_EDIT_BUTTON.place(x=450, y=700, anchor=tk.CENTER, width=300, height=50)
