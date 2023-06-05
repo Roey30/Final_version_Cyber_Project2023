@@ -562,7 +562,7 @@ def switch_pictures_page(frame, pic_name, num):
             frame.master.switch_frame(EditPicturesPage, 1)
 
 
-def check_picture(path_name, name, frame):
+def check_picture(path_name, name):
     """
     הפעולה הזאת שהמשתמש אכן הכניס את הפרטים לפני שהוא מעלה או מוריד תמונה לאחר עריכה.
     לדוגמא, לאחר העריכה המשתמש רוצה להעלות את התמונה למאגר נתונים הוא צריך להכניס את שם
@@ -570,27 +570,25 @@ def check_picture(path_name, name, frame):
     כך גם בהורדת התמונה למחשב ללא פירוט של מיקום התיקיה שהמשתמש רוצה שהתמונה תהיה הוא לא יוכל להוריד את התמונה.
     :param path_name: מיקום התמונה
     :param name: שם התמונה
-    :param frame: החלון הספציפי
     """
     global DOWN_LOAD_PICTURE_BUTTON, UPLOAD_EDIT_BUTTON, IMAGE_AFTER_EDIT, NO_NAME, NO_PATH
     if path_name == '':
-        NO_PATH = tk.Label(frame, text="Please enter path name to download", bg="black", fg="white",
-                           font=("Arial", 12, "bold"), padx=20,
-                           pady=20, bd=3, relief=tk.RAISED)
+
         NO_PATH.place(x=1050, y=630, anchor=tk.CENTER, width=300, height=20)
         DOWN_LOAD_PICTURE_BUTTON.config(stat='disabled')
     else:
         NO_PATH.place_forget()
         DOWN_LOAD_PICTURE_BUTTON.config(stat='active')
-    if name != '' and len(UNDO_STACK) != 0:
-        path_edit = SELECTED_IMAGE_TO_EDIT.split('.JPG')[0]
-        IMAGE_AFTER_EDIT.save(f"{path_edit}_{name.replace(' ', '_')}.JPG")
-        NO_NAME.place_forget()
-        UPLOAD_EDIT_BUTTON.config(stat='active')
+    if name != '':
+        if len(UNDO_STACK) != 0:
+            path_edit = SELECTED_IMAGE_TO_EDIT.split('.JPG')[0]
+            IMAGE_AFTER_EDIT.save(f"{path_edit}_{name.replace(' ', '_')}.JPG")
+            NO_NAME.place_forget()
+            UPLOAD_EDIT_BUTTON.config(stat='active')
+        else:
+            NO_NAME.config(text="make a change to upload")
     else:
-        NO_NAME = tk.Label(frame, text="Please enter picture name to upload", bg="black", fg="white",
-                           font=("Arial", 12, "bold"), padx=20,
-                           pady=20, bd=3, relief=tk.RAISED)
+        NO_NAME.config(text="Please enter picture name to upload")
         NO_NAME.place(x=1050, y=650, anchor=tk.CENTER, width=300, height=20)
         UPLOAD_EDIT_BUTTON.config(stat='disabled')
 
