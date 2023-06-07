@@ -32,6 +32,8 @@ USERNAME_STORAGE = []  # us
 PICTURES_STORAGE = []  # pi
 
 # CONNECTIONS PROTOCOL:
+# FIRST MESSAGE: LENGTH=THE MESSAGE LENGTH
+# SECOND MESSAGE: THE IMAGE ITSELF
 PICTURES_TO_SERVER_PROTOCOL = 'PTSP'
 PICTURES_TO_CLIENT_PROTOCOL = 'PTCP'
 LOG_IN_CLIENT_PROTOCOL = 'LICP'
@@ -175,18 +177,21 @@ def serverside_picture_handle(c, number_pictures):
     try:
         number_pictures = int(number_pictures)
         while number_pictures > 0:
-            image_data = b''
             c.sendall(pickle.dumps('ok'))
+            data = c.recv(4096).decode()
+            data = data.split("=")
+            length = int(data[1])
+            image_data = b''
             while True:
-                data = c.recv(4096)
-                if data[-4:][:4] == b'aaaa':
+                if len(image_data) == length:
                     c.sendall(pickle.dumps("got it"))
                     picture_name = pickle.loads(c.recv(1024))
                     version = pickle.loads(c.recv(1024))
                     print("hellllllooooo")
-                    image_data += data[:-4]
+                    image_data += data
                     break
                 else:
+                    data = c.recv(4096)
                     image_data += data
 
             # Convert the image data into an image object
@@ -226,20 +231,20 @@ def clientside_picture_handle(c):
         cursor = connection_data.cursor()
 
         cursor.execute("SELECT * FROM PICTURES")
-        users = cursor.fetchall()
+        pictures = cursor.fetchall()
 
         connection_data.close()
-        msg_pic_to_client = str(len(users))
-        not_thing = b'aaaa'
+        msg_pic_to_client = str(len(pictures))
         print(msg_pic_to_client, type(msg_pic_to_client))
         c.sendall(pickle.dumps(msg_pic_to_client))
-        print(f"storage paths: {users} ")
-        for i in users:
+        print(f"storage paths: {pictures} ")
+        for i in pictures:
             with open(i[2], 'rb') as f:
                 image_data = f.read()
             if pickle.loads(c.recv(1024)) == 'ok':
+                data_to_client = f"LENGTH={len(image_data)}"
+                c.sendall(data_to_client.encode())
                 c.sendall(image_data)
-                c.sendall(not_thing)
             if pickle.loads(c.recv(1024)) == 'got it':
                 c.sendall(pickle.dumps(i[1]))
                 c.sendall(pickle.dumps(i[3]))
