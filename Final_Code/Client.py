@@ -25,6 +25,8 @@ MSG_LEN = 1024
 RESULT = 0
 
 # CONNECTIONS PROTOCOL:
+# FIRST MESSAGE: LENGTH=THE MESSAGE LENGTH
+# SECOND MESSAGE: THE IMAGE ITSELF
 PICTURES_TO_SERVER_PROTOCOL = 'PTSP'
 PICTURES_TO_CLIENT_PROTOCOL = 'PTCP'
 LOG_IN_CLIENT_PROTOCOL = 'LICP'
@@ -414,7 +416,6 @@ def uploads_pictures_to_server(number_picture, frame, page):
             return
         else:
             msg_pic_to_server = PICTURES_TO_SERVER_PROTOCOL, str(number_picture)
-            not_thing = b'aaaa'
             conn.sendall(pickle.dumps(msg_pic_to_server))
             print(f"storage paths: {STORAGE_PATH_PICTURE} ")
             num_pic = 0
@@ -427,8 +428,9 @@ def uploads_pictures_to_server(number_picture, frame, page):
                     if msg_from_server == 'ok':
                         with open(pic[0], 'rb') as f:
                             image_data = f.read()
+                        data_to_server = f"LENGTH={len(image_data)}"
+                        conn.sendall(data_to_server.encode())
                         conn.sendall(image_data)
-                        conn.sendall(not_thing)
                     if msg_from_server == 'got it':
                         conn.sendall(pickle.dumps(pic[1]))
                         conn.sendall((pickle.dumps(pic[2])))
@@ -451,7 +453,8 @@ def uploads_pictures_to_server(number_picture, frame, page):
                                      fg="white",
                                      font=("Arial", 12, "bold"), padx=20,
                                      pady=20, bd=3, relief=tk.RAISED). \
-                                place(x=450, y=635, anchor='w', width=450, height=30)
+                                place(x=700, y=635, anchor='w', width=450, height=30)
+                            NO_NAME.place_forget()
                         return
     except ssl.SSLError as err:
         print(f"Something went wrong with the server: {err}")
@@ -471,19 +474,21 @@ def get_pictures_from_server():
         number_picture = conn.recv(MSG_LEN)
         number_picture = int(pickle.loads(number_picture))
         while number_picture > 0:
-            image_data = b''
             conn.sendall(pickle.dumps('ok'))
+            data = conn.recv(4096).decode()
+            data = data.split("=")
+            length = int(data[1])
+            image_data = b''
             while True:
-                data = conn.recv(4096)
-                if data[-4:][:4] == b'aaaa':
+                if len(image_data) == length:
                     conn.sendall(pickle.dumps("got it"))
-                    picture_name = pickle.loads(conn.recv(MSG_LEN))
-                    picture_version = pickle.loads(conn.recv(MSG_LEN))
-                    image_data += data[:-4]
+                    picture_name = pickle.loads(conn.recv(1024))
+                    picture_version = pickle.loads(conn.recv(1024))
+                    image_data += data
                     break
                 else:
+                    data = conn.recv(4096)
                     image_data += data
-
             # Convert the image data into an image object
             picture_name = picture_name.split('.')
             picture_name = picture_name[0]
@@ -540,7 +545,7 @@ def client_back_to_start():
 def switch_pictures_page(frame, pic_name, num):
     """
     הפעולה הזאת מחליפה לחלון הקשור לתמונה המקורית שנבחרה
-   (שני חלונות הקשורים לתמונה המקורית הם: חלון העריכה וחלון התמונות הערוכות של התמונה המקורית). 
+   (שני חלונות הקשורים לתמונה המקורית הם: חלון העריכה וחלון התמונות הערוכות של התמונה המקורית).
     :param frame: החלון הספציפי
     :param pic_name: שם התמונה
     :param num: מספר מאפין את סוג העמוד
@@ -562,35 +567,44 @@ def switch_pictures_page(frame, pic_name, num):
             frame.master.switch_frame(EditPicturesPage, 1)
 
 
-def check_picture(path_name, name):
+def check_picture(path_name, name, picture_name_entry):
     """
     הפעולה הזאת שהמשתמש אכן הכניס את הפרטים לפני שהוא מעלה או מוריד תמונה לאחר עריכה.
     לדוגמא, לאחר העריכה המשתמש רוצה להעלות את התמונה למאגר נתונים הוא צריך להכניס את שם
     התמונה החדשה ובמקרה והוא לא הכניס הפעולה לא תאפשר לו להעלות את התמונה (היא תכבה את הכפתור שמאפשר להעלות את התמונה)
     כך גם בהורדת התמונה למחשב ללא פירוט של מיקום התיקיה שהמשתמש רוצה שהתמונה תהיה הוא לא יוכל להוריד את התמונה.
+    :param picture_name_entry: הרשומה של שם התמונה שבעמוד העריכה
     :param path_name: מיקום התמונה
     :param name: שם התמונה
     """
     global DOWN_LOAD_PICTURE_BUTTON, UPLOAD_EDIT_BUTTON, IMAGE_AFTER_EDIT, NO_NAME, NO_PATH
     if path_name == '':
-
-        NO_PATH.place(x=1050, y=630, anchor=tk.CENTER, width=300, height=20)
+        NO_PATH.place(x=1050, y=590, anchor=tk.CENTER, width=300, height=30)
         DOWN_LOAD_PICTURE_BUTTON.config(stat='disabled')
     else:
         NO_PATH.place_forget()
         DOWN_LOAD_PICTURE_BUTTON.config(stat='active')
     if name != '':
         if len(UNDO_STACK) != 0:
-            path_edit = SELECTED_IMAGE_TO_EDIT.split('.JPG')[0]
-            IMAGE_AFTER_EDIT.save(f"{path_edit}_{name.replace(' ', '_')}.JPG")
-            NO_NAME.place_forget()
-            UPLOAD_EDIT_BUTTON.config(stat='active')
+            for picture_name in STORAGE_PICTURE_VER2:
+                picture_name = picture_name[1].split('-')[1]
+                if picture_name != name:
+                    path_edit = SELECTED_IMAGE_TO_EDIT.split('.JPG')[0]
+                    IMAGE_AFTER_EDIT.save(f"{path_edit}_{name.replace(' ', '_')}.JPG")
+                    NO_NAME.place_forget()
+                    picture_name_entry.config(state='disabled')
+                    UPLOAD_EDIT_BUTTON.config(state='active')
+                else:
+                    NO_NAME.place(x=1050, y=650, anchor=tk.CENTER, width=300, height=20)
+                    NO_NAME.config(text="Name already taken")
         else:
+            NO_NAME.place(x=1050, y=635, anchor=tk.CENTER, width=300, height=30)
             NO_NAME.config(text="make a change to upload")
+            picture_name_entry.config(state='normal')
     else:
         NO_NAME.config(text="Please enter picture name to upload")
-        NO_NAME.place(x=1050, y=650, anchor=tk.CENTER, width=300, height=20)
-        UPLOAD_EDIT_BUTTON.config(stat='disabled')
+        NO_NAME.place(x=1050, y=635, anchor=tk.CENTER, width=300, height=30)
+        UPLOAD_EDIT_BUTTON.config(state='disabled')
 
 
 # Define the image editing functions
@@ -1133,7 +1147,7 @@ class EditPicturesPage(tk.Frame):
                                                   bg=COLOR, fg="white", font=("Arial", 12, "bold"), padx=20, pady=20,
                                                   bd=3, relief=tk.RAISED, activebackground=BACKGROUND_BUTTON_COLOR,
                                                   command=lambda: (check_picture(picture_path_name.get(),
-                                                                                 picture_name.get())))
+                                                                                 picture_name.get(), picture_name)))
         Are_You_Sure_button_edit_page.place(x=1050, y=700, anchor=tk.CENTER, width=300, height=50)
         DOWN_LOAD_PICTURE_BUTTON.place(x=750, y=700, anchor=tk.CENTER, width=300, height=50)
         UPLOAD_EDIT_BUTTON.place(x=450, y=700, anchor=tk.CENTER, width=300, height=50)
