@@ -176,24 +176,26 @@ def serverside_picture_handle(c, number_pictures):
     """
     try:
         number_pictures = int(number_pictures)
+        chunks = (b'', b'')
         while number_pictures > 0:
             c.sendall(pickle.dumps('ok'))
             data = c.recv(4096).decode()
             data = data.split("=")
             length = int(data[1])
-            image_data = b''
+            picture_name = data[3]
+            version = int(data[5])
+            image_data = chunks[1]
             while True:
                 if len(image_data) == length:
-                    c.sendall(pickle.dumps("got it"))
-                    picture_name = pickle.loads(c.recv(1024))
-                    version = pickle.loads(c.recv(1024))
-                    print("hellllllooooo")
-                    image_data += data
+                    # conn.sendall(pickle.dumps("got it"))
                     break
                 else:
-                    data = c.recv(4096)
-                    image_data += data
-
+                    msg = c.recv(4096)
+                    if b'!@#$' in msg:
+                        chunks = msg.split(b'!@#$')
+                        image_data += chunks[0]
+                    else:
+                        image_data += msg
             # Convert the image data into an image object
             picture_name = picture_name.split('.')
             picture_name = picture_name[0]
@@ -242,12 +244,10 @@ def clientside_picture_handle(c):
             with open(i[2], 'rb') as f:
                 image_data = f.read()
             if pickle.loads(c.recv(1024)) == 'ok':
-                data_to_client = f"LENGTH={len(image_data)}"
+                data_to_client = f"LENGTH={len(image_data)}=Name={i[1]}=Version={i[3]}"
                 c.sendall(data_to_client.encode())
-                c.sendall(image_data)
-            if pickle.loads(c.recv(1024)) == 'got it':
-                c.sendall(pickle.dumps(i[1]))
-                c.sendall(pickle.dumps(i[3]))
+                msg = image_data + b'!@#$'
+                c.sendall(msg)
     except EOFError and ConnectionResetError as err:
         print(f"Something came up2: {err}")
         print(f"connection {gDict.pop(c)} Has disconnected")
