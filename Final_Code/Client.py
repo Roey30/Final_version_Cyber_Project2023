@@ -428,12 +428,10 @@ def uploads_pictures_to_server(number_picture, frame, page):
                     if msg_from_server == 'ok':
                         with open(pic[0], 'rb') as f:
                             image_data = f.read()
-                        data_to_server = f"LENGTH={len(image_data)}"
-                        conn.sendall(data_to_server.encode())
-                        conn.sendall(image_data)
-                    if msg_from_server == 'got it':
-                        conn.sendall(pickle.dumps(pic[1]))
-                        conn.sendall((pickle.dumps(pic[2])))
+                        data_to_client = f"LENGTH={len(image_data)}=Name={pic[1]}=Version={pic[2]}"
+                        conn.sendall(data_to_client.encode())
+                        msg = image_data + b'!@#$'
+                        conn.sendall(msg)
                         num_pic += 1
                     elif msg_from_server == 'Finish':
                         STORAGE_PATH_PICTURE = []
@@ -473,22 +471,26 @@ def get_pictures_from_server():
         conn.sendall(pickle.dumps(msg_pic_to_client))
         number_picture = conn.recv(MSG_LEN)
         number_picture = int(pickle.loads(number_picture))
+        chunks = (b'', b'')
         while number_picture > 0:
             conn.sendall(pickle.dumps('ok'))
             data = conn.recv(4096).decode()
             data = data.split("=")
             length = int(data[1])
-            image_data = b''
+            picture_name = data[3]
+            picture_version = int(data[5])
+            image_data = chunks[1]
             while True:
                 if len(image_data) == length:
-                    conn.sendall(pickle.dumps("got it"))
-                    picture_name = pickle.loads(conn.recv(1024))
-                    picture_version = pickle.loads(conn.recv(1024))
-                    image_data += data
+                    # conn.sendall(pickle.dumps("got it"))
                     break
                 else:
-                    data = conn.recv(4096)
-                    image_data += data
+                    msg = conn.recv(4096)
+                    if b'!@#$' in msg:
+                        chunks = msg.split(b'!@#$')
+                        image_data += chunks[0]
+                    else:
+                        image_data += msg
             # Convert the image data into an image object
             picture_name = picture_name.split('.')
             picture_name = picture_name[0]
