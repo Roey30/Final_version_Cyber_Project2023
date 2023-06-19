@@ -287,7 +287,7 @@ def login_function(entry_user_name, entry_password, frame):
         root.quit()
 
 
-def marked_image(image, button_image, frame, path, picture_name, pic_ver, image_PIL):
+def marked_image(image, button_image, frame, path, picture_name, pic_ver, image_pil):
     """
     הפעולה הזאת אחראית לסימון התמונה הנלחצת על ידי המשתמש.
     :param image: התמונה
@@ -296,15 +296,15 @@ def marked_image(image, button_image, frame, path, picture_name, pic_ver, image_
     :param path: מיקום התמונה
     :param picture_name: שם התמונה
     :param pic_ver: גרסת התמונה
-    :param image_PIL: התמונה גרסת פיל
+    :param image_pil: התמונה גרסת פיל
     """
-    global EDIT_IMAGE, BUTTON_IMAGE, IF_IMAGE_PRESSED, EDIT_IMAGE_PATH, \
-        SELECTED_IMAGE_TO_EDIT, RESET_BUTTON, picture, NO_PICTURE_WAS_SELECTED_BUTTON, VERSION, IMAGE_PIL, PANEL_EDITED_IMAGE
+    global EDIT_IMAGE, BUTTON_IMAGE, IF_IMAGE_PRESSED, EDIT_IMAGE_PATH, SELECTED_IMAGE_TO_EDIT, \
+        RESET_BUTTON, picture, NO_PICTURE_WAS_SELECTED_BUTTON, VERSION, IMAGE_PIL, PANEL_EDITED_IMAGE
     SELECTED_IMAGE_TO_EDIT = path
     EDIT_IMAGE = image
     VERSION = pic_ver
     picture = picture_name
-    IMAGE_PIL = image_PIL
+    IMAGE_PIL = image_pil
     if not IF_IMAGE_PRESSED and VERSION == 1:
         RESET_BUTTON = tk.Button(frame, text="Resets marked picture", bg=COLOR, fg="white",
                                  font=("Arial", 12, "bold"), padx=20, pady=20, bd=3,
@@ -354,14 +354,14 @@ def print_pictures(picture_path, frame, what_picture_page):
     if what_picture_page:  # it's the picture self page
         if pic_ver >= 2:
             if image:
-                image_PIL = Image.open(path)
+                image_pil = Image.open(path)
                 EDIT_IMAGE_PATH = path
-                image = image_PIL.resize((200, 200), Image.LANCZOS)
+                image = image_pil.resize((200, 200), Image.LANCZOS)
                 image = ImageTk.PhotoImage(image)
             if PANEL is None:
                 button_image = tk.Button(frame, image=image, relief=FLAT, bd=4, bg="black",
                                          command=lambda: marked_image(image, button_image, frame, path, name, pic_ver,
-                                                                      image_PIL))
+                                                                      image_pil))
                 PANEL = button_image
                 PANEL.place(x=120 + (240 * COUNT_PICTURE_VAR2), y=200, anchor=tk.CENTER)
                 tk.Label(frame, text=f"{name}", bg="black", fg="white",
@@ -376,14 +376,14 @@ def print_pictures(picture_path, frame, what_picture_page):
     elif not what_picture_page:  # it's the picture page
         if pic_ver == 1:
             if image:
-                image_PIL = Image.open(path)
+                image_pil = Image.open(path)
                 EDIT_IMAGE_PATH = path
-                image = image_PIL.resize((200, 200), Image.LANCZOS)
+                image = image_pil.resize((200, 200), Image.LANCZOS)
                 image = ImageTk.PhotoImage(image)
             if PANEL is None:
                 button_image = tk.Button(frame, image=image, relief=FLAT, bd=4, bg="black",
                                          command=lambda: marked_image(image, button_image, frame, path, name, pic_ver,
-                                                                      image_PIL))
+                                                                      image_pil))
                 PANEL = button_image
                 PANEL.place(x=120 + (240 * COUNT_PICTURE), y=200, anchor=tk.CENTER)
                 tk.Label(frame, text=f"Name: {name}", bg="black", fg="white",
@@ -462,9 +462,9 @@ def uploads_pictures_to_server(number_picture, frame, page):
 
 def get_pictures_from_server():
     """
-    הפעולה הזאת שולחת הודעה לשרת שהיא רוצה לקבל את
-    כל התמונות שיש במאגר נתונים והשרת מחזיר לה את כל התמונות, בנוסף הפעולה הזאת מחלקת את כל התמונות לשני קבוצות;
-    קבוצה של תמונות מקורית (כאלה שהמשתמש העלה ישר) וקבוצה של תמונות ערוכות (תמונות מקוריות שעברו עריכה על ידי אחד המשתמשים).
+    הפעולה הזאת שולחת הודעה לשרת שהיא רוצה לקבל את כל התמונות שיש במאגר נתונים והשרת מחזיר לה את כל התמונות, 
+    בנוסף הפעולה הזאת מחלקת את כל התמונות לשני קבוצות; קבוצה של תמונות מקורית (כאלה שהמשתמש העלה ישר) וקבוצה של 
+    תמונות ערוכות (תמונות מקוריות שעברו עריכה על ידי אחד המשתמשים). 
     """
     try:
         msg_pic_to_client = PICTURES_TO_CLIENT_PROTOCOL
@@ -764,7 +764,8 @@ class MainWindow(tk.Tk):
 
     def __init__(self):
         """
-        הפעולה הזאת היא הפעולה הבונה של המחלקה, היא מסדרת את כל ההגדרות של הממשק והיא זאת שפותחת את החלון הראשון (StartPage).
+        הפעולה הזאת היא הפעולה הבונה של המחלקה, היא מסדרת את כל ההגדרות של הממשק והיא זאת שפותחת את החלון הראשון (
+        StartPage). 
         """
         super().__init__()
         self._frame = None
@@ -775,9 +776,9 @@ class MainWindow(tk.Tk):
 
     def create_picture_page_frames(self):
         """
-        הפעולה הזאת יוצרת את כל החלונות של התמונות המקוריות. היא עושה זאת בכך שהיא ממבקשת
-        ומקבלת את כל התמונות מהצד שרת (BACK – END), סופרת אותכם ומחלקת אותם לחמש (בכל חלון יש עד חמש תמונות),
-       לאחר מכן היא יוצרת בכל חלון כותרת של מספר החלון, את הכפתורים (כמתואר במדריך למשתמש) ואת התמונות לפי סדר קבלתם מהשרת.
+        הפעולה הזאת יוצרת את כל החלונות של התמונות המקוריות. היא עושה זאת בכך שהיא ממבקשת ומקבלת את כל התמונות מהצד 
+        שרת (BACK – END), סופרת אותכם ומחלקת אותם לחמש (בכל חלון יש עד חמש תמונות), לאחר מכן היא יוצרת בכל חלון כותרת 
+        של מספר החלון, את הכפתורים (כמתואר במדריך למשתמש) ואת התמונות לפי סדר קבלתם מהשרת. 
         """
         self.picture_page_frames = []
         number_of_frames = 1
@@ -866,13 +867,10 @@ class MainWindow(tk.Tk):
 
     def switch_frame(self, frame_class, number):
         """
-        הפעולה הזאת מחליפה בין חלונות.
-        היא בקבלת את החלון (מטיפוס מחלקה) אליו היא צרכיה להחליף ומספר מזהה, כדי לדעת האם היא צריכה לבצע שינוים בחלון או לא.
-למשל כאשר המספר הוא 2 זאת אומרת שהחלון הוא אחד החלונות הראשיים של התמונות,
-        לכן הפעולה קוראת לפעולה create_picture_page_frame(self)
-        כדי ליצור חלונות חדשים ומעודכנים ורק לאחר מכן עוברת לחלון הנדרש.
-        :param frame_class: סוג חלון מחלקה
-        :param number: מספר ממשי
+        הפעולה הזאת מחליפה בין חלונות. היא בקבלת את החלון (מטיפוס מחלקה) אליו היא צרכיה להחליף ומספר מזהה, 
+        כדי לדעת האם היא צריכה לבצע שינוים בחלון או לא. למשל כאשר המספר הוא 2 זאת אומרת שהחלון הוא אחד החלונות 
+        הראשיים של התמונות, לכן הפעולה קוראת לפעולה create_picture_page_frame(self) כדי ליצור חלונות חדשים ומעודכנים 
+        ורק לאחר מכן עוברת לחלון הנדרש. :param frame_class: סוג חלון מחלקה :param number: מספר ממשי 
         """
         if number == 1:
             new_frame = frame_class(self)
@@ -1109,8 +1107,9 @@ class EditPicturesPage(tk.Frame):
         הפעולה הזאת בעצם היא זאת שיוצרת את כל התכונות של העמוד בתוך המחלקה, למשל היא יוצרת את הכותרות והכפתורים.
         """
         super().__init__(master)
-        global EDIT_IMAGE, PANEL, EDIT_IMAGE_PATH, UPLOAD_EDIT_BUTTON, picture, NUMBER_PAGE, IMAGE_INFO_LABEL, NO_PATH, NO_NAME, \
-            DOWN_LOAD_PICTURE_BUTTON, VERSION, IMAGE_PIL, IMG, IMAGE_AFTER_EDIT, PANEL_EDITED_IMAGE, NO_EDIT_LABEL, NAME_FIRST_LABEL
+        global EDIT_IMAGE, PANEL, EDIT_IMAGE_PATH, UPLOAD_EDIT_BUTTON, picture, NUMBER_PAGE,\
+            IMAGE_INFO_LABEL, NO_PATH, NO_NAME, DOWN_LOAD_PICTURE_BUTTON, VERSION, IMAGE_PIL, IMG,\
+            IMAGE_AFTER_EDIT, PANEL_EDITED_IMAGE, NO_EDIT_LABEL, NAME_FIRST_LABEL
         self.configure(bg=BACKGROUND_COLOR)
         if NUMBER_PICTURE == 0:
             NUMBER_PAGE = 3
@@ -1135,7 +1134,8 @@ class EditPicturesPage(tk.Frame):
                                        font=("Arial", 12, "bold"), padx=20, pady=20, bd=3,
                                        activebackground=BACKGROUND_BUTTON_COLOR, state='disabled',
                                        command=lambda: (STORAGE_PATH_PICTURE.append((
-                                           f"{SELECTED_IMAGE_TO_EDIT.split('.JPG')[0]}_{picture_name.get().replace(' ', '_')}.JPG",
+                                           f"{SELECTED_IMAGE_TO_EDIT.split('.JPG')[0]}_"
+                                           f"{picture_name.get().replace(' ', '_')}.JPG", 
                                            f"{picture}-{picture_name.get().replace(' ', '_')}",
                                            int(VERSION) + 1)),
                                                         print(f"path storage: {STORAGE_PATH_PICTURE}"),
@@ -1145,12 +1145,12 @@ class EditPicturesPage(tk.Frame):
                                              font=("Arial", 12, "bold"), padx=20, pady=20, bd=3, relief=tk.RAISED,
                                              activebackground=BACKGROUND_BUTTON_COLOR, state='disabled',
                                              command=lambda: download_picture(picture_path_name.get()))
-        Are_You_Sure_button_edit_page = tk.Button(self, text="Are you done with the picture?",
+        are_you_sure_button_edit_page = tk.Button(self, text="Are you done with the picture?",
                                                   bg=COLOR, fg="white", font=("Arial", 12, "bold"), padx=20, pady=20,
                                                   bd=3, relief=tk.RAISED, activebackground=BACKGROUND_BUTTON_COLOR,
                                                   command=lambda: (check_picture(picture_path_name.get(),
                                                                                  picture_name.get(), picture_name)))
-        Are_You_Sure_button_edit_page.place(x=1050, y=700, anchor=tk.CENTER, width=300, height=50)
+        are_you_sure_button_edit_page.place(x=1050, y=700, anchor=tk.CENTER, width=300, height=50)
         DOWN_LOAD_PICTURE_BUTTON.place(x=750, y=700, anchor=tk.CENTER, width=300, height=50)
         UPLOAD_EDIT_BUTTON.place(x=450, y=700, anchor=tk.CENTER, width=300, height=50)
         tk.Label(self, text="Enter the name of the path you want for downloading:", bg="black", fg="white",
@@ -1251,10 +1251,8 @@ class EditPicturesPage(tk.Frame):
         undo_button.place(x=825, y=500, anchor=tk.CENTER, width=200, height=25)
 
         IMAGE_INFO_LABEL = tk.Label(self,
-                                    text="Image format: {}\nImage mode: {}\nFile name: {}".format(IMG.format, IMG.mode,
-                                                                                                  format(
-                                                                                                      os.path.basename(
-                                                                                                          EDIT_IMAGE_PATH))))
+                                    text="Image format: {}\nImage mode: {}\nFile name: {}"
+                                    .format(IMG.format, IMG.mode, format(os.path.basename(EDIT_IMAGE_PATH))))
         IMAGE_INFO_LABEL.place(x=1075, y=500, anchor=tk.CENTER, width=200, height=50)
 
         NO_EDIT_LABEL = tk.Label(self, text="No change has been done", bg="black", fg="white",
@@ -1273,8 +1271,8 @@ class UploadPicturesPage(tk.Frame):
         הפעולה הזאת בעצם היא זאת שיוצרת את כל התכונות של העמוד בתוך המחלקה, למשל היא יוצרת את הכותרות והכפתורים.
         """
         super().__init__(master)
-        global NUMBER_PICTURE, STORAGE_PATH_PICTURE, UPLOAD_PICTURE_BUTTON_PICTURE_PAGE, SELECT_IMAGE_BUTTON, EDIT_IMAGE, \
-            PANEL_STORAGE, NO_PICTURE_SELECTED, NUMBER_PAGE, UNDO_UPLOAD_BUTTON
+        global NUMBER_PICTURE, STORAGE_PATH_PICTURE, UPLOAD_PICTURE_BUTTON_PICTURE_PAGE, SELECT_IMAGE_BUTTON,\
+            EDIT_IMAGE, PANEL_STORAGE, NO_PICTURE_SELECTED, NUMBER_PAGE, UNDO_UPLOAD_BUTTON
         self.configure(bg=BACKGROUND_COLOR)
 
         NO_PICTURE_SELECTED = tk.Label(self, text="No picture was selected", bg="black", fg="white",
